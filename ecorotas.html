@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoRota — Mobilidade Urbana Sustentável</title>
+
+<!--
+══════════════════════════════════════════════════════════════════
+  ROTEIRO DE APRESENTAÇÃO — VÍDEO 4 MINUTOS
+  AEP 2026.1 — ESOFT 3º SEMESTRE — UNICESUMAR
+
+  João PEDRO fala as partes marcadas [JP]
+  GUILHERME fala as partes marcadas [G]
+══════════════════════════════════════════════════════════════════
+
+[JP] — 0:00 a 0:40 — PROBLEMA E ODS
+"Olá, eu sou João Pedro e esse é o Guilherme. Hoje vamos apresentar
+o EcoRota, nosso projeto da AEP 2026.1 para a disciplina de ESOFT,
+3º semestre da UniCesumar.
+
+O problema que a gente resolveu é a mobilidade urbana. Segundo o IBGE,
+mais de 87% dos brasileiros vivem em cidades — e a maioria delas
+sofre com trânsito, ônibus lotados e falta de infraestrutura para
+quem quer usar transporte sustentável. Isso está diretamente ligado
+à ODS 11 da ONU: cidades e comunidades sustentáveis.
+
+A nossa pergunta foi: e se um app mostrasse o impacto ambiental de
+cada rota antes de o usuário decidir por onde ir?"
+
+[G] — 0:40 a 1:20 — A SOLUÇÃO
+"A solução que desenvolvemos é o EcoRota. É uma aplicação web que
+permite ao usuário buscar rotas entre dois pontos e comparar cada
+opção pelo Eco Score — uma pontuação de 0 a 100 que representa
+o quanto aquela rota é menos poluente do que ir de carro.
+
+Além disso, o app tem gamificação: o usuário acumula pontos cada
+vez que escolhe uma rota sustentável, sobe de nível e desbloqueia
+conquistas. A ideia é exatamente a que a literatura apoia:
+quando o impacto ambiental fica visível, as pessoas levam isso
+em consideração na hora de decidir."
+
+[JP] — 1:20 a 2:10 — DEMONSTRAÇÃO DA APLICAÇÃO
+"Vou mostrar a aplicação funcionando agora. [ABRE O NAVEGADOR]
+
+Aqui na tela de início, o usuário digita a origem e o destino.
+Eu vou colocar Terminal Central até UniCesumar Maringá e clicar
+em Buscar Rotas.
+
+O sistema retorna quatro rotas ordenadas pelo Eco Score — do mais
+sustentável para o menos sustentável. A Ciclovia Verde tem score 98,
+o Metrô + Ônibus tem 81, o Ônibus Expresso tem 74 e o Ônibus
+Convencional tem 55.
+
+Quando eu clico em uma rota, aparece o painel de detalhe com
+o tempo, o CO₂ evitado e o custo, além do passo a passo do trajeto.
+Vou confirmar a Ciclovia Verde — olha como o sistema registra
+os pontos, atualiza a barra de XP e desbloqueia a conquista
+'Primeira Pedalada'."
+
+[G] — 2:10 a 3:10 — EXPLICAÇÃO DO CÓDIGO
+"Agora vou explicar as escolhas técnicas do nosso código.
+
+Nós usamos Orientação a Objetos com duas classes principais.
+A classe Rota encapsula todos os dados de uma rota — nome, tipo,
+tempo, custo, CO₂ evitado e Eco Score — e tem o método
+classificacaoEco() que retorna 'alta', 'media' ou 'baixa'
+automaticamente dependendo do score. Isso é encapsulamento:
+a lógica fica dentro do objeto, não espalhada pelo código.
+
+A classe Usuario controla o estado do jogador — pontos, nível,
+conquistas e CO₂ total acumulado. O método registrarViagem recebe
+um objeto Rota e atualiza tudo automaticamente. Isso é coesão:
+cada classe tem uma responsabilidade clara.
+
+Para estruturas de dados, usamos duas. A primeira é uma Fila,
+ou Queue — quando o usuário busca rotas, elas entram na fila
+ordenadas por Eco Score. A fila tem os métodos enqueue, dequeue
+e peek, e garante que a rota mais sustentável seja sempre
+a primeira processada. Você consegue ver essa fila visualmente
+na tela, com os scores em sequência.
+
+A segunda é uma Pilha, ou Stack — cada viagem confirmada é
+empilhada no histórico. A pilha usa push para adicionar e
+toArray com reverse para mostrar do mais recente ao mais antigo.
+Isso é exatamente o comportamento LIFO — Last In, First Out."
+
+[JP] — 3:10 a 3:45 — POR QUE ESSAS ESCOLHAS
+"A fila foi a estrutura ideal para as rotas porque ela preserva
+a ordem de prioridade — a rota com maior Eco Score fica na frente
+e é a primeira sugerida ao usuário, como uma fila real de
+atendimento por importância.
+
+A pilha foi ideal para o histórico porque o comportamento
+natural de um histórico é mostrar o mais recente primeiro —
+e é exatamente isso que a pilha faz naturalmente com LIFO.
+
+Usamos JavaScript puro, sem frameworks, justamente para deixar
+a estrutura de dados e a orientação a objetos explícitas no código,
+sem abstração de bibliotecas externas."
+
+[G] — 3:45 a 4:00 — FECHAMENTO
+"O EcoRota mostrou na prática que dá pra aplicar conceitos de
+estrutura de dados e orientação a objetos em um projeto real
+com proposta de valor concreta, ligado diretamente à ODS 11.
+Obrigado pela atenção."
+
+══════════════════════════════════════════════════════════════════
+  FIM DO ROTEIRO
+══════════════════════════════════════════════════════════════════
+-->
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --verde-escuro: #0d3d2b;
+    --verde-meio: #1a6644;
+    --verde-vivo: #2ecc71;
+    --verde-claro: #a8f0c6;
+    --amarelo: #f5c842;
+    --cinza-bg: #f0f4f0;
+    --cinza-card: #ffffff;
+    --texto: #0d1f17;
+    --texto-suave: #4a6358;
+    --borda: #c8ddd2;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Space Grotesk', sans-serif; background: var(--cinza-bg); color: var(--texto); min-height: 100vh; }
+
+  header {
+    background: var(--verde-escuro);
+    padding: 0 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: 700; color: var(--verde-claro); letter-spacing: -0.5px; }
+  .eco { color: var(--verde-vivo); }
+  .user-badge { display: flex; align-items: center; gap: 10px; color: #fff; font-size: 0.875rem; }
+  .pontos-badge { background: var(--verde-vivo); color: var(--verde-escuro); font-weight: 700; padding: 4px 12px; border-radius: 20px; font-family: 'DM Mono', monospace; font-size: 0.8rem; }
+
+  .hero { background: linear-gradient(135deg, var(--verde-escuro) 0%, var(--verde-meio) 100%); padding: 48px 32px 40px; color: #fff; }
+  .hero-inner { max-width: 860px; margin: 0 auto; }
+  .hero h1 { font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 700; line-height: 1.15; letter-spacing: -1px; margin-bottom: 10px; }
+  .hero h1 span { color: var(--verde-vivo); }
+  .hero p { color: var(--verde-claro); font-size: 1rem; max-width: 520px; line-height: 1.6; margin-bottom: 32px; }
+  .ods-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; margin-bottom: 20px; }
+
+  .busca-card { background: #fff; border-radius: var(--radius); padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+  .busca-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end; }
+  .field label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .field input { width: 100%; border: 1.5px solid var(--borda); border-radius: var(--radius-sm); padding: 10px 14px; font-family: inherit; font-size: 0.95rem; color: var(--texto); background: var(--cinza-bg); outline: none; transition: border-color 0.2s; }
+  .field input:focus { border-color: var(--verde-vivo); background: #fff; }
+  .btn-buscar { background: var(--verde-vivo); color: var(--verde-escuro); border: none; border-radius: var(--radius-sm); padding: 11px 28px; font-family: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.1s; white-space: nowrap; }
+  .btn-buscar:hover { background: #27c265; transform: translateY(-1px); }
+
+  .main { max-width: 860px; margin: 32px auto; padding: 0 24px 48px; }
+
+  .secao-titulo { font-size: 0.75rem; font-weight: 700; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .secao-titulo::after { content: ''; flex: 1; height: 1px; background: var(--borda); }
+
+  .rotas-lista { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+
+  .rota-card { background: var(--cinza-card); border: 1.5px solid var(--borda); border-radius: var(--radius); padding: 20px 22px; display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s; }
+  .rota-card:hover { border-color: var(--verde-vivo); box-shadow: 0 4px 16px rgba(46,204,113,0.15); transform: translateY(-2px); }
+  .rota-card.selecionada { border-color: var(--verde-vivo); background: #f0faf5; box-shadow: 0 4px 20px rgba(46,204,113,0.2); }
+  .rota-icone { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+  .rota-icone.bike   { background: #e8f8f0; }
+  .rota-icone.onibus { background: #e8f0ff; }
+  .rota-icone.misto  { background: #f0f8ff; }
+  .rota-info { min-width: 0; }
+  .rota-nome { font-weight: 600; font-size: 0.975rem; margin-bottom: 4px; }
+  .rota-detalhe { font-size: 0.825rem; color: var(--texto-suave); display: flex; gap: 14px; flex-wrap: wrap; }
+  .rota-eco { text-align: right; flex-shrink: 0; }
+  .eco-score { font-family: 'DM Mono', monospace; font-size: 1.5rem; font-weight: 500; line-height: 1; }
+  .eco-score.alta  { color: var(--verde-vivo); }
+  .eco-score.media { color: #f0a500; }
+  .eco-score.baixa { color: #e74c3c; }
+  .eco-label { font-size: 0.7rem; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.5px; }
+  .eco-pts { font-size: 0.75rem; font-weight: 600; color: var(--verde-meio); background: #e0f7ec; padding: 2px 8px; border-radius: 10px; margin-top: 4px; display: inline-block; }
+
+  #painel-detalhe { background: #fff; border: 1.5px solid var(--verde-vivo); border-radius: var(--radius); padding: 24px; margin-bottom: 32px; display: none; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .detalhe-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .detalhe-titulo { font-size: 1.1rem; font-weight: 700; }
+  .detalhe-subtitulo { font-size: 0.85rem; color: var(--texto-suave); margin-top: 2px; }
+  .btn-confirmar { background: var(--verde-escuro); color: #fff; border: none; border-radius: var(--radius-sm); padding: 10px 22px; font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .btn-confirmar:hover { background: var(--verde-meio); }
+  .metricas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .metrica-item { background: var(--cinza-bg); border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+  .metrica-valor { font-family: 'DM Mono', monospace; font-size: 1.3rem; font-weight: 500; color: var(--verde-escuro); }
+  .metrica-nome { font-size: 0.72rem; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+  .passos-lista { list-style: none; }
+  .passo { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--borda); }
+  .passo:last-child { border-bottom: none; }
+  .passo-num { width: 24px; height: 24px; border-radius: 50%; background: var(--verde-escuro); color: #fff; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .passo-txt { font-size: 0.875rem; line-height: 1.5; }
+
+  .gamif-card { background: linear-gradient(135deg, var(--verde-escuro), var(--verde-meio)); border-radius: var(--radius); padding: 24px; color: #fff; margin-bottom: 32px; }
+  .gamif-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .gamif-titulo { font-size: 1rem; font-weight: 700; }
+  .nivel-badge { background: var(--amarelo); color: var(--verde-escuro); padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+  .xp-bar-bg { background: rgba(255,255,255,0.15); border-radius: 4px; height: 8px; margin-bottom: 8px; }
+  .xp-bar-fill { height: 8px; border-radius: 4px; background: var(--verde-vivo); transition: width 0.5s ease; }
+  .xp-info { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--verde-claro); }
+  .conquistas { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .conquista { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; }
+  .conquista.travada { opacity: 0.4; }
+
+  .fila-visual { background: #fff; border: 1.5px solid var(--borda); border-radius: var(--radius); padding: 20px 22px; margin-bottom: 32px; }
+  .fila-titulo { font-size: 0.85rem; font-weight: 600; color: var(--texto-suave); margin-bottom: 12px; }
+  .fila-itens { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .fila-item { background: var(--cinza-bg); border: 1px solid var(--borda); border-radius: var(--radius-sm); padding: 8px 14px; font-size: 0.8rem; font-family: 'DM Mono', monospace; display: flex; align-items: center; gap: 6px; }
+  .fila-item.primeiro { background: var(--verde-escuro); color: #fff; border-color: var(--verde-escuro); }
+  .fila-seta { color: var(--borda); font-size: 1rem; }
+
+  .historico-lista { display: flex; flex-direction: column; gap: 8px; }
+  .hist-item { background: #fff; border: 1px solid var(--borda); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; }
+  .hist-rota { font-weight: 500; }
+  .hist-meta { color: var(--texto-suave); font-size: 0.8rem; }
+  .hist-pts { font-weight: 700; color: var(--verde-meio); font-family: 'DM Mono', monospace; }
+
+  #toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--verde-escuro); color: #fff; padding: 14px 24px; border-radius: var(--radius); font-size: 0.9rem; font-weight: 500; box-shadow: 0 8px 32px rgba(0,0,0,0.25); transition: transform 0.3s ease; z-index: 200; white-space: nowrap; }
+  #toast.visivel { transform: translateX(-50%) translateY(0); }
+
+  footer { text-align: center; padding: 24px; font-size: 0.78rem; color: var(--texto-suave); border-top: 1px solid var(--borda); }
+
+  @media (max-width: 640px) {
+    .busca-grid { grid-template-columns: 1fr; }
+    .metricas-grid { grid-template-columns: 1fr 1fr; }
+    .rota-card { grid-template-columns: auto 1fr; }
+    header { padding: 0 16px; }
+    .hero { padding: 32px 16px 28px; }
+    .main { padding: 0 16px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🌿 <span><span class="eco">Eco</span>Rota</span></div>
+  <div class="user-badge">
+    <span id="nome-usuario">João Pedro</span>
+    <span class="pontos-badge" id="display-pontos">0 pts</span>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="ods-tag">🎯 ODS 11 — Cidades e Comunidades Sustentáveis</div>
+    <h1>Chegue onde precisa,<br><span>sem pesar no planeta.</span></h1>
+    <p>Compare rotas pelo impacto ambiental, acumule pontos escolhendo transporte sustentável e ajude a transformar sua cidade.</p>
+    <div class="busca-card">
+      <div class="busca-grid">
+        <div class="field">
+          <label>📍 Origem</label>
+          <input type="text" id="input-origem" placeholder="Ex: Av. Brasil, 100" value="Terminal Central">
+        </div>
+        <div class="field">
+          <label>🏁 Destino</label>
+          <input type="text" id="input-destino" placeholder="Ex: UniCesumar" value="UniCesumar Maringá">
+        </div>
+        <button class="btn-buscar" onclick="buscarRotas()">Buscar Rotas</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- GAMIFICAÇÃO -->
+  <div class="gamif-card">
+    <div class="gamif-header">
+      <div class="gamif-titulo">🏆 Sua jornada sustentável</div>
+      <div class="nivel-badge" id="nivel-txt">Nível 1 — Iniciante</div>
+    </div>
+    <div class="xp-bar-bg"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
+    <div class="xp-info">
+      <span id="xp-atual">0 / 100 XP para o próximo nível</span>
+      <span id="co2-total">CO₂ evitado: 0 kg</span>
+    </div>
+    <div class="conquistas">
+      <div class="conquista travada" id="conq-primeira">🚲 Primeira Pedalada</div>
+      <div class="conquista travada" id="conq-bus">🚌 Passageiro Frequente</div>
+      <div class="conquista travada" id="conq-eco10">🌱 10 Rotas Eco</div>
+    </div>
+  </div>
+
+  <!-- RESULTADOS -->
+  <div id="secao-rotas" style="display:none">
+    <div class="secao-titulo">Rotas disponíveis</div>
+    <div class="rotas-lista" id="lista-rotas"></div>
+  </div>
+
+  <!-- DETALHE -->
+  <div id="painel-detalhe">
+    <div class="detalhe-header">
+      <div>
+        <div class="detalhe-titulo" id="detalhe-nome"></div>
+        <div class="detalhe-subtitulo" id="detalhe-sub"></div>
+      </div>
+      <button class="btn-confirmar" onclick="confirmarRota()">✔ Usar esta rota</button>
+    </div>
+    <div class="metricas-grid">
+      <div class="metrica-item"><div class="metrica-valor" id="m-tempo">—</div><div class="metrica-nome">⏱ Tempo</div></div>
+      <div class="metrica-item"><div class="metrica-valor" id="m-co2">—</div><div class="metrica-nome">🌿 CO₂ evitado</div></div>
+      <div class="metrica-item"><div class="metrica-valor" id="m-custo">—</div><div class="metrica-nome">💰 Custo</div></div>
+    </div>
+    <ul class="passos-lista" id="passos-lista"></ul>
+  </div>
+
+  <!-- FILA (Queue) -->
+  <div id="secao-fila" style="display:none">
+    <div class="secao-titulo">Fila de sugestões (Estrutura de dados — Queue)</div>
+    <div class="fila-visual">
+      <div class="fila-titulo">Rotas ordenadas por Eco Score na fila de processamento — a primeira é sempre a mais sustentável</div>
+      <div class="fila-itens" id="fila-itens"></div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO (Stack) -->
+  <div id="secao-historico" style="display:none">
+    <div class="secao-titulo">Histórico de viagens (Estrutura de dados — Stack)</div>
+    <div class="historico-lista" id="historico-lista"></div>
+  </div>
+
+</div>
+
+<footer>
+  EcoRota © 2026 — João Pedro Pelegrini Jorgensen &amp; Guilherme Saverio Dantas Baldinu · ESOFT 3º Semestre · UniCesumar · ODS 11
+</footer>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  MODELAGEM ORIENTADA A OBJETOS
+//  Usamos classes para encapsular dados e comportamentos,
+//  tornando o código organizado, reutilizável e coeso.
+// ═══════════════════════════════════════════════════════
+
+/**
+ * Classe Rota
+ * Representa uma opção de rota com todos os seus atributos.
+ * O método classificacaoEco() encapsula a lógica de categorização
+ * dentro do próprio objeto — isso é encapsulamento.
+ */
+class Rota {
+  constructor({ id, nome, tipo, icone, tempo, co2Evitado, custo, ecoScore, pontos, passos }) {
+    this.id         = id;
+    this.nome       = nome;
+    this.tipo       = tipo;       // 'bike' | 'onibus' | 'misto'
+    this.icone      = icone;
+    this.tempo      = tempo;
+    this.co2Evitado = co2Evitado; // kg de CO2 evitado em relação ao carro
+    this.custo      = custo;
+    this.ecoScore   = ecoScore;   // 0 a 100 — quanto menor o impacto, maior o score
+    this.pontos     = pontos;     // XP que o usuário ganha ao escolher esta rota
+    this.passos     = passos;     // array de strings com as instruções do trajeto
+  }
+
+  // Método que retorna a classificação visual do eco score
+  // Lógica encapsulada no objeto — não precisa ser repetida no código da UI
+  classificacaoEco() {
+    if (this.ecoScore >= 80) return 'alta';
+    if (this.ecoScore >= 50) return 'media';
+    return 'baixa';
+  }
+}
+
+/**
+ * Classe Usuario
+ * Controla o estado do usuário: pontos, nível, conquistas e CO2 acumulado.
+ * O método registrarViagem() é o único responsável por atualizar o estado —
+ * isso é coesão: uma classe faz uma coisa e faz bem.
+ */
+class Usuario {
+  constructor(nome) {
+    this.nome         = nome;
+    this.pontos       = 0;
+    this.nivel        = 1;
+    this.co2Total     = 0;
+    this.viagensTotal = 0;
+    this.conquistas   = { primeira: false, bus: false, eco10: false };
+  }
+
+  // Registra uma viagem: atualiza CO2, pontos, viagens e conquistas
+  registrarViagem(rota) {
+    this.co2Total += rota.co2Evitado;
+    this.viagensTotal += 1;
+    this.pontos += rota.pontos;
+    // Desbloqueia conquistas baseado no tipo de rota e quantidade de viagens
+    if (rota.tipo === 'bike') this.conquistas.primeira = true;
+    if ((rota.tipo === 'onibus' || rota.tipo === 'metro' || rota.tipo === 'misto') && this.viagensTotal >= 2)
+      this.conquistas.bus = true;
+    if (this.viagensTotal >= 3) this.conquistas.eco10 = true;
+    this._verificarNivel();
+  }
+
+  _verificarNivel() {
+    if (this.pontos >= 200) this.nivel = 3;
+    else if (this.pontos >= 100) this.nivel = 2;
+    else this.nivel = 1;
+  }
+
+  percentualXP() {
+    if (this.nivel === 1) return Math.min((this.pontos / 100) * 100, 100);
+    if (this.nivel === 2) return Math.min(((this.pontos - 100) / 100) * 100, 100);
+    return 100;
+  }
+
+  labelNivel() {
+    var labels = ['', 'Iniciante', 'Viajante Eco', 'Guardião Verde'];
+    return 'Nível ' + this.nivel + ' — ' + labels[this.nivel];
+  }
+
+  xpInfo() {
+    if (this.nivel < 3) return this.pontos + ' / ' + (this.nivel * 100) + ' XP para o próximo nível';
+    return this.pontos + ' XP — Nível máximo! 🏆';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ESTRUTURAS DE DADOS
+//  Implementamos duas estruturas clássicas do zero,
+//  sem bibliotecas externas, para deixar o funcionamento
+//  completamente explícito e didático.
+// ═══════════════════════════════════════════════════════
+
+/**
+ * FilaRotas — Queue (Fila)
+ * Estrutura FIFO: First In, First Out.
+ * Usada para organizar as rotas sugeridas por prioridade (Eco Score).
+ * A rota mais sustentável entra primeiro e é processada primeiro.
+ *
+ * Por que fila aqui?
+ * Porque queremos garantir que a melhor rota ambiental seja sempre
+ * apresentada primeiro ao usuário — como uma fila de atendimento
+ * por prioridade.
+ */
+class FilaRotas {
+  constructor() { this._dados = []; }
+
+  enqueue(rota) { this._dados.push(rota); }        // adiciona no fim
+  dequeue()     { return this._dados.shift(); }     // remove do início (FIFO)
+  peek()        { return this._dados[0] || null; }  // espia o primeiro sem remover
+  tamanho()     { return this._dados.length; }
+  toArray()     { return [...this._dados]; }
+  limpar()      { this._dados = []; }
+
+  // Popula a fila já ordenada por eco score (maior score = maior prioridade)
+  popularOrdenada(rotas) {
+    this.limpar();
+    var ordenadas = [...rotas].sort(function(a, b) { return b.ecoScore - a.ecoScore; });
+    var self = this;
+    ordenadas.forEach(function(r) { self.enqueue(r); });
+  }
+}
+
+/**
+ * PilhaHistorico — Stack (Pilha)
+ * Estrutura LIFO: Last In, First Out.
+ * Usada para registrar o histórico de viagens do usuário.
+ * A última viagem feita aparece sempre no topo — mais recente primeiro.
+ *
+ * Por que pilha aqui?
+ * Porque o comportamento natural de um histórico é mostrar o mais
+ * recente primeiro, e a pilha implementa exatamente isso com LIFO.
+ */
+class PilhaHistorico {
+  constructor() { this._dados = []; }
+
+  push(item) { this._dados.push(item); }                       // empilha no topo
+  pop()      { return this._dados.pop(); }                     // desempilha do topo (LIFO)
+  peek()     { return this._dados[this._dados.length - 1] || null; }
+  tamanho()  { return this._dados.length; }
+  toArray()  { return [...this._dados].reverse(); }            // mais recente primeiro
+}
+
+// ═══════════════════════════════════════════════════════
+//  CATÁLOGO DE ROTAS
+//  Instâncias da classe Rota com dados reais simulados
+// ═══════════════════════════════════════════════════════
+
+var catalogo = [
+  new Rota({ id:1, nome:'Ciclovia Verde', tipo:'bike', icone:'🚲',
+    tempo:'28 min', co2Evitado:1.8, custo:'R$ 0,00', ecoScore:98, pontos:50,
+    passos:['Siga pela Av. Brasil por 800m até a entrada da ciclovia',
+            'Percorra a Ciclovia do Parque (2,1 km) em direção ao centro',
+            'Vire à direita na Rua das Flores — 400m até o destino',
+            'Bicicleta compartilhada disponível no ponto A-07'] }),
+
+  new Rota({ id:2, nome:'Ônibus Expresso', tipo:'onibus', icone:'🚌',
+    tempo:'22 min', co2Evitado:0.9, custo:'R$ 4,40', ecoScore:74, pontos:30,
+    passos:['Caminhe 180m até o ponto da Linha 305 — Expresso UniCesumar',
+            'Embarque e siga até a parada "UniCesumar Campus" (6 paradas)',
+            'Desembarque e caminhe 120m até a entrada principal'] }),
+
+  new Rota({ id:3, nome:'Metrô + Ônibus', tipo:'misto', icone:'🚇',
+    tempo:'18 min', co2Evitado:1.1, custo:'R$ 6,60', ecoScore:81, pontos:35,
+    passos:['Caminhe até a Estação Central do Metrô (350m)',
+            'Tome a Linha 2 sentido Norte — 3 estações até "Zona Sul"',
+            'Transborde para o Ônibus Linha 201 (integração gratuita)',
+            'Desembarque na parada "Universidade" — 80m a pé'] }),
+
+  new Rota({ id:4, nome:'Ônibus Convencional', tipo:'onibus', icone:'🚌',
+    tempo:'35 min', co2Evitado:0.6, custo:'R$ 4,40', ecoScore:55, pontos:20,
+    passos:['Caminhe até o ponto da Linha 108 (250m)',
+            'Aguarde o ônibus — intervalo de 15 min',
+            'Siga até a parada "Parque Industrial" e transborde para Linha 52',
+            'Desembarque em frente à UniCesumar'] })
+];
+
+// ═══════════════════════════════════════════════════════
+//  INSTÂNCIAS GLOBAIS
+// ═══════════════════════════════════════════════════════
+
+var usuario      = new Usuario('João Pedro');
+var filaRotas    = new FilaRotas();
+var pilhaHist    = new PilhaHistorico();
+var rotaSelecionada = null;
+
+// ═══════════════════════════════════════════════════════
+//  FUNÇÕES DE INTERFACE
+// ═══════════════════════════════════════════════════════
+
+function buscarRotas() {
+  var origem  = document.getElementById('input-origem').value.trim();
+  var destino = document.getElementById('input-destino').value.trim();
+  if (!origem || !destino) { mostrarToast('⚠️ Preencha origem e destino!'); return; }
+
+  // Popula a fila de rotas ordenada por eco score (Queue)
+  filaRotas.popularOrdenada(catalogo);
+
+  renderRotas(filaRotas.toArray());
+  renderFila(filaRotas.toArray());
+
+  document.getElementById('secao-rotas').style.display = 'block';
+  document.getElementById('secao-fila').style.display  = 'block';
+  document.getElementById('painel-detalhe').style.display = 'none';
+  mostrarToast('🔍 ' + filaRotas.tamanho() + ' rotas encontradas — ordenadas por impacto ambiental');
+}
+
+function renderRotas(rotas) {
+  var lista = document.getElementById('lista-rotas');
+  lista.innerHTML = '';
+  rotas.forEach(function(rota) {
+    var cls = rota.classificacaoEco(); // método da classe Rota
+    lista.innerHTML +=
+      '<div class="rota-card" id="card-' + rota.id + '" onclick="selecionarRota(' + rota.id + ')">' +
+        '<div class="rota-icone ' + rota.tipo + '">' + rota.icone + '</div>' +
+        '<div class="rota-info">' +
+          '<div class="rota-nome">' + rota.nome + '</div>' +
+          '<div class="rota-detalhe">' +
+            '<span>⏱ ' + rota.tempo + '</span>' +
+            '<span>🌿 ' + rota.co2Evitado + ' kg CO₂ evitado</span>' +
+            '<span>💰 ' + rota.custo + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="rota-eco">' +
+          '<div class="eco-score ' + cls + '">' + rota.ecoScore + '</div>' +
+          '<div class="eco-label">Eco Score</div>' +
+          '<div class="eco-pts">+' + rota.pontos + ' pts</div>' +
+        '</div>' +
+      '</div>';
+  });
+}
+
+function selecionarRota(id) {
+  rotaSelecionada = catalogo.find(function(r) { return r.id === id; });
+  document.querySelectorAll('.rota-card').forEach(function(c) { c.classList.remove('selecionada'); });
+  document.getElementById('card-' + id).classList.add('selecionada');
+
+  var r = rotaSelecionada;
+  document.getElementById('detalhe-nome').textContent = r.nome;
+  document.getElementById('detalhe-sub').textContent  = r.tipo.toUpperCase() + ' · Eco Score ' + r.ecoScore + '/100';
+  document.getElementById('m-tempo').textContent  = r.tempo;
+  document.getElementById('m-co2').textContent    = r.co2Evitado + ' kg';
+  document.getElementById('m-custo').textContent  = r.custo;
+
+  var passosList = document.getElementById('passos-lista');
+  passosList.innerHTML = r.passos.map(function(p, i) {
+    return '<li class="passo"><div class="passo-num">' + (i+1) + '</div><div class="passo-txt">' + p + '</div></li>';
+  }).join('');
+
+  var painel = document.getElementById('painel-detalhe');
+  painel.style.display = 'block';
+  painel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function confirmarRota() {
+  if (!rotaSelecionada) return;
+  var rota = rotaSelecionada;
+  var pts  = rota.pontos;
+
+  // Registra viagem na classe Usuario (atualiza pontos, nível, conquistas)
+  usuario.registrarViagem(rota);
+
+  // Empilha no histórico (Stack — LIFO)
+  pilhaHist.push({
+    nome:   rota.nome,
+    icone:  rota.icone,
+    pontos: pts,
+    co2:    rota.co2Evitado,
+    hora:   new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  });
+
+  atualizarUI();
+  renderHistorico();
+  document.getElementById('painel-detalhe').style.display = 'none';
+  mostrarToast('✅ Rota confirmada! +' + pts + ' pontos ganhos 🌿');
+}
+
+function atualizarUI() {
+  document.getElementById('display-pontos').textContent = usuario.pontos + ' pts';
+  document.getElementById('nivel-txt').textContent      = usuario.labelNivel();
+  document.getElementById('xp-bar').style.width         = usuario.percentualXP() + '%';
+  document.getElementById('xp-atual').textContent       = usuario.xpInfo();
+  document.getElementById('co2-total').textContent      = 'CO₂ evitado: ' + usuario.co2Total.toFixed(1) + ' kg';
+  if (usuario.conquistas.primeira) document.getElementById('conq-primeira').classList.remove('travada');
+  if (usuario.conquistas.bus)      document.getElementById('conq-bus').classList.remove('travada');
+  if (usuario.conquistas.eco10)    document.getElementById('conq-eco10').classList.remove('travada');
+}
+
+function renderHistorico() {
+  document.getElementById('secao-historico').style.display = 'block';
+  // Usa toArray() da pilha — retorna do mais recente para o mais antigo (LIFO)
+  var items = pilhaHist.toArray();
+  document.getElementById('historico-lista').innerHTML = items.map(function(item) {
+    return '<div class="hist-item">' +
+      '<div class="hist-rota">' + item.icone + ' ' + item.nome + '</div>' +
+      '<div class="hist-meta">' + item.hora + ' · ' + item.co2 + ' kg CO₂ evitado</div>' +
+      '<div class="hist-pts">+' + item.pontos + ' pts</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderFila(rotas) {
+  // Exibe visualmente a Queue — o primeiro item (maior eco score) destacado
+  var container = document.getElementById('fila-itens');
+  container.innerHTML = rotas.map(function(r, i) {
+    return '<div class="fila-item ' + (i===0 ? 'primeiro' : '') + '">' +
+      r.icone + ' <span>' + r.ecoScore + '</span>' +
+    '</div>' + (i < rotas.length - 1 ? '<span class="fila-seta">›</span>' : '');
+  }).join('');
+}
+
+var toastTimer;
+function mostrarToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('visivel');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { t.classList.remove('visivel'); }, 3200);
+}
+</script>
+</body>
+</html>
